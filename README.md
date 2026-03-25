@@ -1,27 +1,56 @@
 # Student Course Registration Database System
 
-This mini database project demonstrates my understanding of relational database design, SQL querying, and PL/SQL concepts.
+## Overview
+This mini project demonstrates my understanding of relational database design, SQL querying, and Oracle-style PL/SQL concepts.
+
+The system models a simple university course registration process where students can enroll in courses taught by lecturers. It includes database schema creation, sample data insertion, reporting queries, and PL/SQL objects such as a procedure, function, and trigger.
 
 ## Features
-- Student, lecturer, course, and enrollment management
-- Relational schema with primary and foreign keys
-- Sample data for testing
-- SQL queries for reporting and analysis
-- PL/SQL-style procedure, function, and trigger examples
+- Manage students, lecturers, courses, and enrollments
+- Apply primary keys, foreign keys, unique constraints, and check constraints
+- Run SQL queries for reporting and analysis
+- Use PL/SQL objects such as procedures, functions, and triggers
+- Maintain a simple audit log for enrollment-related actions
 
-## Technologies / Concepts
+## Technologies / Concepts Used
 - SQL
+- Oracle-style PL/SQL
 - Relational Database Design
 - Normalization
-- Joins, Aggregation, Subqueries
-- Procedures, Functions, Triggers
+- Joins
+- Aggregation
+- Subqueries
+- Constraints
+- Audit Logging
 
-## Project Objectives
-This project was created as part of my self-learning and academic practice in database systems to strengthen my skills in SQL and database development.
+## Project Structure
+- `schema.sql` – creates the database tables
+- `sample_data.sql` – inserts sample records
+- `queries.sql` – contains useful SQL queries for reports and analysis
+- `plsql_objects.sql` – contains PL/SQL procedure, function, and trigger
 
-## Files
-- `schema.sql` – table creation scripts
-- `sample_data.sql` – sample records
-- `queries.sql` – useful SQL queries and reports
-- `plsql_objects.sql` – procedure, function, and trigger examples
-- `project_explanation.md` – project overview and design explanation
+## Database Entities
+- Students
+- Lecturers
+- Courses
+- Enrollments
+- Audit_Log
+
+## Relationships
+- One lecturer can teach many courses
+- One student can enroll in many courses
+- One course can have many students
+- The `Enrollments` table resolves the many-to-many relationship between students and courses
+
+## Learning Outcome
+This project helped me practice:
+- designing relational schemas
+- writing SQL queries for data retrieval and reporting
+- using constraints for data integrity
+- writing Oracle-style PL/SQL objects
+
+## Note
+This project is written using Oracle-style SQL / PL-SQL syntax for learning and portfolio purposes.
+
+## Author
+Migara Wijesinghe
