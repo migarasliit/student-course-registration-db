@@ -57,7 +57,7 @@ This project is written using Oracle-style SQL / PL-SQL syntax for learning and 
 My weekly practice, notes, and lab-related learning materials are available in the `learning-materials` branch.
 
 Branch link:
-https://github.com/migarasliit/student-course-registration-db/tree/learning-materials
+https://github.com/migarasliit/student-course-registration-db/tree/learning-materials_1
 
 ## Author
 Migara Wijesinghe
