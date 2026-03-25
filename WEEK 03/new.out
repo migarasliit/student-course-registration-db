@@ -1,0 +1,546 @@
+SQL> @/home/oracle/script.sql
+SQL> --(1)
+SQL> --(a)
+SQL> -- Step 1: Create incomplete type for dept_t
+SQL> CREATE TYPE dept_t;
+  2  /
+CREATE TYPE dept_t;
+*
+ERROR at line 1:
+ORA-00955: name is already used by an existing object
+Help: https://docs.oracle.com/error-help/db/ora-00955/
+
+
+
+More Details :
+https://docs.oracle.com/error-help/db/ora-00955/
+SQL> 
+SQL> -- Step 2: Create emp_t type with REF to dept_t
+SQL> CREATE TYPE emp_t AS OBJECT (
+  2      empno      CHAR(6),
+  3      firstname  VARCHAR2(12),
+  4      lastname   VARCHAR2(15),
+  5      workdept   REF dept_t,
+  6      sex        CHAR(1),
+  7      birthdate  DATE,
+  8      salary     NUMBER(8,2)
+  9  );
+ 10  /
+CREATE TYPE emp_t AS OBJECT (
+*
+ERROR at line 1:
+ORA-00955: name is already used by an existing object
+Help: https://docs.oracle.com/error-help/db/ora-00955/
+
+
+
+More Details :
+https://docs.oracle.com/error-help/db/ora-00955/
+SQL> 
+SQL> -- Step 3: Now create dept_t with REF to emp_t and REF to dept_t
+SQL> CREATE TYPE dept_t AS OBJECT (
+  2      deptno     CHAR(3),
+  3      deptname   VARCHAR2(36),
+  4      mgrno      REF emp_t,
+  5      admrdept   REF dept_t
+  6  );
+  7  /
+CREATE TYPE dept_t AS OBJECT (
+*
+ERROR at line 1:
+ORA-00955: name is already used by an existing object
+Help: https://docs.oracle.com/error-help/db/ora-00955/
+
+
+
+More Details :
+https://docs.oracle.com/error-help/db/ora-00955/
+SQL> 
+SQL> --(b)
+SQL> CREATE TABLE ordept OF dept_t (
+  2      deptno PRIMARY KEY
+  3  )
+  4  /
+
+Error starting at line : 29 File @ /home/oracle/script.sql
+In command -
+CREATE TABLE ordept OF dept_t (
+    deptno PRIMARY KEY
+)
+Error report -
+ORA-00955: name is already used by an existing object
+Help: https://docs.oracle.com/error-help/db/ora-00955/
+00955. 00000 -  "name is already used by an existing object"
+*Cause:    An attempt was made to create a database object (such
+           as a table, view, cluster, index, or synonym) that already
+           existed. A user's database objects must have distinct names.
+*Action:   Enter a unique name for the database object or modify
+           or drop the existing object so it can be reused.
+SQL> 
+SQL> CREATE TABLE oremp OF emp_t (
+  2      empno PRIMARY KEY
+  3  )
+  4  /
+
+Error starting at line : 34 File @ /home/oracle/script.sql
+In command -
+CREATE TABLE oremp OF emp_t (
+    empno PRIMARY KEY
+)
+Error report -
+ORA-00955: name is already used by an existing object
+Help: https://docs.oracle.com/error-help/db/ora-00955/
+00955. 00000 -  "name is already used by an existing object"
+*Cause:    An attempt was made to create a database object (such
+           as a table, view, cluster, index, or synonym) that already
+           existed. A user's database objects must have distinct names.
+*Action:   Enter a unique name for the database object or modify
+           or drop the existing object so it can be reused.
+SQL> 
+SQL> -- Set scope for REF columns
+SQL> ALTER TABLE oremp
+  2      ADD SCOPE FOR (workdept) IS ordept
+  3  /
+
+Error starting at line : 40 File @ /home/oracle/script.sql
+In command -
+ALTER TABLE oremp
+    ADD SCOPE FOR (workdept) IS ordept
+Error report -
+ORA-22894: cannot add constraint on existing unscoped REF columns of non-empty
+tables
+Help: https://docs.oracle.com/error-help/db/ora-22894/
+22894. 00000 -  "cannot add constraint on existing unscoped REF columns of non-empty tables"
+*Cause:    An attempt was made to add a constraint to existing unscoped
+           REF columns of a table which contains one or more rows.
+*Action:   Remove the constraint specification or add the constraint after
+           emptying the table.
+SQL> 
+SQL> ALTER TABLE ordept
+  2      ADD SCOPE FOR (mgrno) IS oremp
+  3  /
+
+Error starting at line : 44 File @ /home/oracle/script.sql
+In command -
+ALTER TABLE ordept
+    ADD SCOPE FOR (mgrno) IS oremp
+Error report -
+ORA-22894: cannot add constraint on existing unscoped REF columns of non-empty
+tables
+Help: https://docs.oracle.com/error-help/db/ora-22894/
+22894. 00000 -  "cannot add constraint on existing unscoped REF columns of non-empty tables"
+*Cause:    An attempt was made to add a constraint to existing unscoped
+           REF columns of a table which contains one or more rows.
+*Action:   Remove the constraint specification or add the constraint after
+           emptying the table.
+SQL> 
+SQL> ALTER TABLE ordept
+  2      ADD SCOPE FOR (admrdept) IS ordept
+  3  /
+
+Error starting at line : 48 File @ /home/oracle/script.sql
+In command -
+ALTER TABLE ordept
+    ADD SCOPE FOR (admrdept) IS ordept
+Error report -
+ORA-22894: cannot add constraint on existing unscoped REF columns of non-empty
+tables
+Help: https://docs.oracle.com/error-help/db/ora-22894/
+22894. 00000 -  "cannot add constraint on existing unscoped REF columns of non-empty tables"
+*Cause:    An attempt was made to add a constraint to existing unscoped
+           REF columns of a table which contains one or more rows.
+*Action:   Remove the constraint specification or add the constraint after
+           emptying the table.
+SQL> 
+SQL> --(c)
+SQL> -- Insert into OREMP with NULL workdept
+SQL> INSERT INTO oremp VALUES ('000010','CHRISTINE','HAAS',NULL,'F',DATE '1953-08-14',72750)
+  2  /
+
+Error starting at line : 54 File @ /home/oracle/script.sql
+In command -
+INSERT INTO oremp VALUES ('000010','CHRISTINE','HAAS',NULL,'F',DATE '1953-08-14',72750)
+Error report -
+ORA-00001: unique constraint (HR.SYS_C0013516) violated on table HR.OREMP
+columns (EMPNO)
+ORA-03301: (ORA-00001 details) row with column values (EMPNO:'000010') already
+exists
+Help: https://docs.oracle.com/error-help/db/ora-00001/
+
+
+More Details :
+https://docs.oracle.com/error-help/db/ora-00001/
+https://docs.oracle.com/error-help/db/ora-03301/
+SQL> 
+SQL> INSERT INTO oremp VALUES ('000020','MICHAEL','THOMPSON',NULL,'M',DATE '1968-02-02',61250)
+  2  /
+
+Error starting at line : 57 File @ /home/oracle/script.sql
+In command -
+INSERT INTO oremp VALUES ('000020','MICHAEL','THOMPSON',NULL,'M',DATE '1968-02-02',61250)
+Error report -
+ORA-00001: unique constraint (HR.SYS_C0013516) violated on table HR.OREMP
+columns (EMPNO)
+ORA-03301: (ORA-00001 details) row with column values (EMPNO:'000020') already
+exists
+Help: https://docs.oracle.com/error-help/db/ora-00001/
+
+
+More Details :
+https://docs.oracle.com/error-help/db/ora-00001/
+https://docs.oracle.com/error-help/db/ora-03301/
+SQL> 
+SQL> INSERT INTO oremp VALUES ('000030','SALLY','KWAN',NULL,'F',DATE '1971-05-11',58250)
+  2  /
+
+Error starting at line : 60 File @ /home/oracle/script.sql
+In command -
+INSERT INTO oremp VALUES ('000030','SALLY','KWAN',NULL,'F',DATE '1971-05-11',58250)
+Error report -
+ORA-00001: unique constraint (HR.SYS_C0013516) violated on table HR.OREMP
+columns (EMPNO)
+ORA-03301: (ORA-00001 details) row with column values (EMPNO:'000030') already
+exists
+Help: https://docs.oracle.com/error-help/db/ora-00001/
+
+
+More Details :
+https://docs.oracle.com/error-help/db/ora-00001/
+https://docs.oracle.com/error-help/db/ora-03301/
+SQL> 
+SQL> INSERT INTO oremp VALUES ('000060','IRVING','STERN',NULL,'M',DATE '1965-07-07',55555)
+  2  /
+
+Error starting at line : 63 File @ /home/oracle/script.sql
+In command -
+INSERT INTO oremp VALUES ('000060','IRVING','STERN',NULL,'M',DATE '1965-07-07',55555)
+Error report -
+ORA-00001: unique constraint (HR.SYS_C0013516) violated on table HR.OREMP
+columns (EMPNO)
+ORA-03301: (ORA-00001 details) row with column values (EMPNO:'000060') already
+exists
+Help: https://docs.oracle.com/error-help/db/ora-00001/
+
+
+More Details :
+https://docs.oracle.com/error-help/db/ora-00001/
+https://docs.oracle.com/error-help/db/ora-03301/
+SQL> 
+SQL> INSERT INTO oremp VALUES ('000070','EVA','PULASKI',NULL,'F',DATE '1973-05-26',56170)
+  2  /
+
+Error starting at line : 66 File @ /home/oracle/script.sql
+In command -
+INSERT INTO oremp VALUES ('000070','EVA','PULASKI',NULL,'F',DATE '1973-05-26',56170)
+Error report -
+ORA-00001: unique constraint (HR.SYS_C0013516) violated on table HR.OREMP
+columns (EMPNO)
+ORA-03301: (ORA-00001 details) row with column values (EMPNO:'000070') already
+exists
+Help: https://docs.oracle.com/error-help/db/ora-00001/
+
+
+More Details :
+https://docs.oracle.com/error-help/db/ora-00001/
+https://docs.oracle.com/error-help/db/ora-03301/
+SQL> 
+SQL> INSERT INTO oremp VALUES ('000050','JOHN','GEYER',NULL,'M',DATE '1955-09-15',60175)
+  2  /
+
+Error starting at line : 69 File @ /home/oracle/script.sql
+In command -
+INSERT INTO oremp VALUES ('000050','JOHN','GEYER',NULL,'M',DATE '1955-09-15',60175)
+Error report -
+ORA-00001: unique constraint (HR.SYS_C0013516) violated on table HR.OREMP
+columns (EMPNO)
+ORA-03301: (ORA-00001 details) row with column values (EMPNO:'000050') already
+exists
+Help: https://docs.oracle.com/error-help/db/ora-00001/
+
+
+More Details :
+https://docs.oracle.com/error-help/db/ora-00001/
+https://docs.oracle.com/error-help/db/ora-03301/
+SQL> 
+SQL> INSERT INTO oremp VALUES ('000090','EILEEN','HENDERSON',NULL,'F',DATE '1961-05-15',49750)
+  2  /
+
+Error starting at line : 72 File @ /home/oracle/script.sql
+In command -
+INSERT INTO oremp VALUES ('000090','EILEEN','HENDERSON',NULL,'F',DATE '1961-05-15',49750)
+Error report -
+ORA-00001: unique constraint (HR.SYS_C0013516) violated on table HR.OREMP
+columns (EMPNO)
+ORA-03301: (ORA-00001 details) row with column values (EMPNO:'000090') already
+exists
+Help: https://docs.oracle.com/error-help/db/ora-00001/
+
+
+More Details :
+https://docs.oracle.com/error-help/db/ora-00001/
+https://docs.oracle.com/error-help/db/ora-03301/
+SQL> 
+SQL> INSERT INTO oremp VALUES ('000100','THEODORE','SPENSER',NULL,'M',DATE '1976-12-18',46150)
+  2  /
+
+Error starting at line : 75 File @ /home/oracle/script.sql
+In command -
+INSERT INTO oremp VALUES ('000100','THEODORE','SPENSER',NULL,'M',DATE '1976-12-18',46150)
+Error report -
+ORA-00001: unique constraint (HR.SYS_C0013516) violated on table HR.OREMP
+columns (EMPNO)
+ORA-03301: (ORA-00001 details) row with column values (EMPNO:'000100') already
+exists
+Help: https://docs.oracle.com/error-help/db/ora-00001/
+
+
+More Details :
+https://docs.oracle.com/error-help/db/ora-00001/
+https://docs.oracle.com/error-help/db/ora-03301/
+SQL> 
+SQL> -- Insert into ORDEPT with NULL admrdept
+SQL> INSERT INTO ordept VALUES ('A00','SPIFFY COMPUTER SERVICE DIV.',
+  2      (SELECT REF(e) FROM oremp e WHERE empno='000010'), NULL)
+  3  /
+
+Error starting at line : 79 File @ /home/oracle/script.sql
+In command -
+INSERT INTO ordept VALUES ('A00','SPIFFY COMPUTER SERVICE DIV.',
+    (SELECT REF(e) FROM oremp e WHERE empno='000010'), NULL)
+Error report -
+ORA-00001: unique constraint (HR.SYS_C0013514) violated on table HR.ORDEPT
+columns (DEPTNO)
+ORA-03301: (ORA-00001 details) row with column values (DEPTNO:'A00') already
+exists
+Help: https://docs.oracle.com/error-help/db/ora-00001/
+
+
+More Details :
+https://docs.oracle.com/error-help/db/ora-00001/
+https://docs.oracle.com/error-help/db/ora-03301/
+SQL> 
+SQL> INSERT INTO ordept VALUES ('B01','PLANNING',
+  2      (SELECT REF(e) FROM oremp e WHERE empno='000020'), NULL)
+  3  /
+
+Error starting at line : 83 File @ /home/oracle/script.sql
+In command -
+INSERT INTO ordept VALUES ('B01','PLANNING',
+    (SELECT REF(e) FROM oremp e WHERE empno='000020'), NULL)
+Error report -
+ORA-00001: unique constraint (HR.SYS_C0013514) violated on table HR.ORDEPT
+columns (DEPTNO)
+ORA-03301: (ORA-00001 details) row with column values (DEPTNO:'B01') already
+exists
+Help: https://docs.oracle.com/error-help/db/ora-00001/
+
+
+More Details :
+https://docs.oracle.com/error-help/db/ora-00001/
+https://docs.oracle.com/error-help/db/ora-03301/
+SQL> 
+SQL> INSERT INTO ordept VALUES ('C01','INFORMATION CENTRE',
+  2      (SELECT REF(e) FROM oremp e WHERE empno='000030'), NULL)
+  3  /
+
+Error starting at line : 87 File @ /home/oracle/script.sql
+In command -
+INSERT INTO ordept VALUES ('C01','INFORMATION CENTRE',
+    (SELECT REF(e) FROM oremp e WHERE empno='000030'), NULL)
+Error report -
+ORA-00001: unique constraint (HR.SYS_C0013514) violated on table HR.ORDEPT
+columns (DEPTNO)
+ORA-03301: (ORA-00001 details) row with column values (DEPTNO:'C01') already
+exists
+Help: https://docs.oracle.com/error-help/db/ora-00001/
+
+
+More Details :
+https://docs.oracle.com/error-help/db/ora-00001/
+https://docs.oracle.com/error-help/db/ora-03301/
+SQL> 
+SQL> INSERT INTO ordept VALUES ('D01','DEVELOPMENT CENTRE',
+  2      (SELECT REF(e) FROM oremp e WHERE empno='000060'), NULL)
+  3  /
+
+Error starting at line : 91 File @ /home/oracle/script.sql
+In command -
+INSERT INTO ordept VALUES ('D01','DEVELOPMENT CENTRE',
+    (SELECT REF(e) FROM oremp e WHERE empno='000060'), NULL)
+Error report -
+ORA-00001: unique constraint (HR.SYS_C0013514) violated on table HR.ORDEPT
+columns (DEPTNO)
+ORA-03301: (ORA-00001 details) row with column values (DEPTNO:'D01') already
+exists
+Help: https://docs.oracle.com/error-help/db/ora-00001/
+
+
+More Details :
+https://docs.oracle.com/error-help/db/ora-00001/
+https://docs.oracle.com/error-help/db/ora-03301/
+SQL> 
+SQL> -- Update workdept in OREMP
+SQL> UPDATE oremp e
+  2  SET workdept = (SELECT REF(d) FROM ordept d WHERE d.deptno='A00')
+  3  WHERE empno='000010'
+  4  /
+
+1 row updated.
+
+SQL> 
+SQL> UPDATE oremp e
+  2  SET workdept = (SELECT REF(d) FROM ordept d WHERE d.deptno='B01')
+  3  WHERE empno IN ('000020','000090','000100')
+  4  /
+
+3 rows updated.
+
+SQL> 
+SQL> UPDATE oremp e
+  2  SET workdept = (SELECT REF(d) FROM ordept d WHERE d.deptno='C01')
+  3  WHERE empno IN ('000030','000050')
+  4  /
+
+2 rows updated.
+
+SQL> 
+SQL> UPDATE oremp e
+  2  SET workdept = (SELECT REF(d) FROM ordept d WHERE d.deptno='D01')
+  3  WHERE empno IN ('000060','000070')
+  4  /
+
+2 rows updated.
+
+SQL> 
+SQL> -- Update admrdept in ORDEPT
+SQL> UPDATE ordept d
+  2  SET admrdept = (SELECT REF(ad) FROM ordept ad WHERE ad.deptno='A00')
+  3  WHERE deptno IN ('A00','B01','C01')
+  4  /
+
+3 rows updated.
+
+SQL> 
+SQL> UPDATE ordept d
+  2  SET admrdept = (SELECT REF(ad) FROM ordept ad WHERE ad.deptno='C01')
+  3  WHERE deptno='D01'
+  4  /
+
+1 row updated.
+
+SQL> 
+SQL> --(2)
+SQL> --(a)
+SQL> SELECT d.deptname,
+  2         DEREF(d.mgrno).lastname AS manager_lastname
+  3  FROM ordept d
+  4  /
+
+DEPTNAME                        MANAGER_LASTNAME    
+_______________________________ ___________________ 
+SPIFFY COMPUTER SERVICE DIV.    HAAS                
+PLANNING                        THOMPSON            
+INFORMATION CENTRE              KWAN                
+DEVELOPMENT CENTRE              STERN               
+
+SQL> 
+SQL> --(b)
+SQL> SELECT e.empno,
+  2         e.lastname,
+  3         DEREF(e.workdept).deptname AS department_name
+  4  FROM oremp e
+  5  /
+
+EMPNO     LASTNAME     DEPARTMENT_NAME                 
+_________ ____________ _______________________________ 
+000010    HAAS         SPIFFY COMPUTER SERVICE DIV.    
+000020    THOMPSON     PLANNING                        
+000090    HENDERSON    PLANNING                        
+000100    SPENSER      PLANNING                        
+000030    KWAN         INFORMATION CENTRE              
+000050    GEYER        INFORMATION CENTRE              
+000060    STERN        DEVELOPMENT CENTRE              
+000070    PULASKI      DEVELOPMENT CENTRE              
+
+8 rows selected. 
+
+SQL> 
+SQL> --(c)
+SQL> SELECT d.deptno,
+  2         d.deptname,
+  3         DEREF(d.admrdept).deptname AS admin_dept_name
+  4  FROM ordept d
+  5  /
+
+DEPTNO    DEPTNAME                        ADMIN_DEPT_NAME                 
+_________ _______________________________ _______________________________ 
+A00       SPIFFY COMPUTER SERVICE DIV.    SPIFFY COMPUTER SERVICE DIV.    
+B01       PLANNING                        SPIFFY COMPUTER SERVICE DIV.    
+C01       INFORMATION CENTRE              SPIFFY COMPUTER SERVICE DIV.    
+D01       DEVELOPMENT CENTRE              INFORMATION CENTRE              
+
+SQL> 
+SQL> --(d)
+SQL> SELECT d.deptno,
+  2         d.deptname,
+  3         DEREF(d.admrdept).deptname AS admin_dept_name,
+  4         DEREF(DEREF(d.admrdept).mgrno).lastname AS admin_mgr_lastname
+  5  FROM ordept d
+  6  /
+
+DEPTNO    DEPTNAME                        ADMIN_DEPT_NAME                 ADMIN_MGR_LASTNAME    
+_________ _______________________________ _______________________________ _____________________ 
+A00       SPIFFY COMPUTER SERVICE DIV.    SPIFFY COMPUTER SERVICE DIV.    HAAS                  
+B01       PLANNING                        SPIFFY COMPUTER SERVICE DIV.    HAAS                  
+C01       INFORMATION CENTRE              SPIFFY COMPUTER SERVICE DIV.    HAAS                  
+D01       DEVELOPMENT CENTRE              INFORMATION CENTRE              KWAN                  
+
+SQL> 
+SQL> --(e)
+SQL> SELECT e.empno,
+  2         e.firstname,
+  3         e.lastname,
+  4         e.salary,
+  5         DEREF(DEREF(e.workdept).mgrno).lastname AS manager_lastname,
+  6         DEREF(DEREF(e.workdept).mgrno).salary   AS manager_salary
+  7  FROM oremp e
+  8  /
+
+EMPNO     FIRSTNAME    LASTNAME        SALARY MANAGER_LASTNAME       MANAGER_SALARY 
+_________ ____________ ____________ _________ ___________________ _________________ 
+000010    CHRISTINE    HAAS             72750 HAAS                            72750 
+000020    MICHAEL      THOMPSON         61250 THOMPSON                        61250 
+000090    EILEEN       HENDERSON        49750 THOMPSON                        61250 
+000100    THEODORE     SPENSER          46150 THOMPSON                        61250 
+000030    SALLY        KWAN             58250 KWAN                            58250 
+000050    JOHN         GEYER            60175 KWAN                            58250 
+000060    IRVING       STERN            55555 STERN                           55555 
+000070    EVA          PULASKI          56170 STERN                           55555 
+
+8 rows selected. 
+
+SQL> 
+SQL> --(f)
+SQL> SELECT DEREF(e.workdept).deptno   AS deptno,
+  2         DEREF(e.workdept).deptname AS deptname,
+  3         e.sex,
+  4         AVG(e.salary) AS avg_salary
+  5  FROM oremp e
+  6  GROUP BY DEREF(e.workdept).deptno,
+  7           DEREF(e.workdept).deptname,
+  8           e.sex
+  9  /
+
+DEPTNO    DEPTNAME                        SEX       AVG_SALARY 
+_________ _______________________________ ______ _____________ 
+A00       SPIFFY COMPUTER SERVICE DIV.    F              72750 
+B01       PLANNING                        M              53700 
+B01       PLANNING                        F              49750 
+C01       INFORMATION CENTRE              F              58250 
+C01       INFORMATION CENTRE              M              60175 
+D01       DEVELOPMENT CENTRE              M              55555 
+D01       DEVELOPMENT CENTRE              F              56170 
+
+7 rows selected. 
+
+SQL> SQL> spool off

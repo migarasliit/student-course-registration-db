@@ -1,0 +1,260 @@
+exercise 1
+
+CREATE TYPE address_t AS OBJECT (
+    street_no   VARCHAR2(10),
+    street_name VARCHAR2(30),
+    suburb      VARCHAR2(20),
+    state       CHAR(3),
+    pin         CHAR(4)
+);
+/
+
+CREATE TYPE exch_array AS VARRAY(5) OF VARCHAR2(12);
+/
+
+CREATE TYPE stock_t AS OBJECT (
+    company        VARCHAR2(12),
+    current_price  NUMBER(8,2),
+    exchanges      exch_array,
+    last_dividend  NUMBER(6,2),
+    eps            NUMBER(6,2)  -- Earnings Per Share
+);
+/
+
+CREATE TYPE stock_t AS OBJECT (
+    company        VARCHAR2(12),
+    current_price  NUMBER(8,2),
+    exchanges      exch_array,
+    last_dividend  NUMBER(6,2),
+    eps            NUMBER(6,2)  -- Earnings Per Share
+);
+/
+
+CREATE TYPE investment_t AS OBJECT (
+    company     VARCHAR2(12),
+    buy_date    DATE,
+    qty         NUMBER,
+    buy_price   NUMBER(8,2)
+);
+/
+
+CREATE TYPE investment_ntt AS TABLE OF investment_t;
+/
+
+CREATE TYPE client_t AS OBJECT (
+    firstname    VARCHAR2(15),
+    lastname     VARCHAR2(15),
+    address      address_t,
+    investments  investment_ntt
+);
+/
+
+CREATE TABLE stocks_tab OF stock_t (
+    company PRIMARY KEY
+);
+
+
+CREATE TABLE clients_tab OF client_t (
+    firstname,
+    lastname,
+    PRIMARY KEY (firstname, lastname)
+)
+NESTED TABLE investments STORE AS client_investments_ntt;
+
+
+
+exercise 2
+ --a)  Insert into stocks_tab
+INSERT INTO stocks_tab VALUES (
+    'BHP',
+    10.50,
+    exch_array('Sydney', 'New York'),
+    1.50,
+    3.20
+);
+
+INSERT INTO stocks_tab VALUES (
+    'IBM',
+    70.00,
+    exch_array('New York', 'London', 'Tokyo'),
+    4.25,
+    10.00
+);
+
+INSERT INTO stocks_tab VALUES (
+    'INFOSYS',
+    45.00,
+    exch_array('New York'),
+    3.00,
+    7.80
+);
+
+INSERT INTO stocks_tab VALUES (
+    'INTEL',
+    76.50,
+    exch_array('New York', 'London'),
+    5.00,
+    12.40
+);
+
+INSERT INTO stocks_tab VALUES (
+    'FORD',
+    40.00,
+    exch_array('New York'),
+    2.00,
+    8.50
+);
+
+INSERT INTO stocks_tab VALUES (
+    'GM',
+    60.00,
+    exch_array('New York'),
+    2.50,
+    9.20
+);
+
+-- Insert into clients_tab
+INSERT INTO clients_tab VALUES (
+    'John',
+    'Smith',
+    address_t('3', 'East Av', 'Bentley', 'WA', '6102'),
+    investment_ntt(
+        investment_t('BHP', TO_DATE('02/10/01','DD/MM/YY'), 1000, 12.00),
+        investment_t('BHP', TO_DATE('08/06/02','DD/MM/YY'), 2000, 10.50),
+        investment_t('IBM', TO_DATE('12/02/00','DD/MM/YY'), 500, 58.00),
+        investment_t('IBM', TO_DATE('10/04/01','DD/MM/YY'), 1200, 65.00),
+        investment_t('INFOSYS', TO_DATE('11/08/01','DD/MM/YY'), 1000, 64.00)
+    )
+);
+
+INSERT INTO clients_tab VALUES (
+    'Jill',
+    'Brody',
+    address_t('42', 'Bent St', 'Perth', 'WA', '6001'),
+    investment_ntt(
+        investment_t('INTEL', TO_DATE('30/01/00','DD/MM/YY'), 300, 35.00),
+        investment_t('INTEL', TO_DATE('30/01/01','DD/MM/YY'), 400, 54.00),
+        investment_t('INTEL', TO_DATE('02/10/01','DD/MM/YY'), 200, 60.00),
+        investment_t('FORD', TO_DATE('05/10/99','DD/MM/YY'), 300, 40.00),
+        investment_t('GM', TO_DATE('12/12/00','DD/MM/YY'), 500, 55.50)
+    )
+);
+
+--exercise 3)
+--a)
+SELECT 
+    c.firstname,
+    c.lastname,
+    i.company,
+    s.current_price,
+    s.last_dividend,
+    s.eps
+FROM clients_tab c,
+     TABLE(c.investments) i,
+     stocks_tab s
+WHERE i.company = s.company;
+
+--b)
+
+SELECT 
+    c.firstname,
+    c.lastname,
+    i.company,
+    SUM(i.qty) AS total_shares,
+    ROUND(SUM(i.qty * i.buy_price) / SUM(i.qty), 2) AS avg_price
+FROM clients_tab c,
+     TABLE(c.investments) i
+GROUP BY c.firstname, c.lastname, i.company;
+
+--c)
+
+SELECT 
+    s.company,
+    c.firstname,
+    c.lastname,
+    SUM(i.qty) AS shares_held,
+    SUM(i.qty * s.current_price) AS current_value
+FROM clients_tab c,
+     TABLE(c.investments) i,
+     stocks_tab s
+WHERE i.company = s.company
+  AND 'New York' MEMBER OF s.exchanges
+GROUP BY s.company, c.firstname, c.lastname, s.current_price;
+
+--d)
+SELECT 
+    c.firstname,
+    c.lastname,
+    SUM(i.qty * i.buy_price) AS total_purchase_value
+FROM clients_tab c,
+     TABLE(c.investments) i
+GROUP BY c.firstname, c.lastname;
+
+--e)
+
+SELECT 
+    c.firstname,
+    c.lastname,
+    SUM(i.qty * s.current_price) - SUM(i.qty * i.buy_price) AS book_profit
+FROM clients_tab c,
+     TABLE(c.investments) i,
+     stocks_tab s
+WHERE i.company = s.company
+GROUP BY c.firstname, c.lastname;
+
+
+--exercise 4)
+
+--Remove INFOSYS from John
+
+DELETE FROM TABLE(
+    SELECT c.investments 
+    FROM clients_tab c 
+    WHERE c.firstname = 'John' AND c.lastname = 'Smith'
+) i
+WHERE i.company = 'INFOSYS';
+
+--Add INFOSYS to Jill
+
+INSERT INTO TABLE(
+    SELECT c.investments 
+    FROM clients_tab c 
+    WHERE c.firstname = 'Jill' AND c.lastname = 'Brody'
+)
+SELECT 
+    'INFOSYS',
+    SYSDATE,
+    1000,
+    current_price
+FROM stocks_tab
+WHERE company = 'INFOSYS';
+
+--Remove GM from Jill
+
+DELETE FROM TABLE(
+    SELECT c.investments 
+    FROM clients_tab c 
+    WHERE c.firstname = 'Jill' AND c.lastname = 'Brody'
+) i
+WHERE i.company = 'GM';
+
+--Add GM to John
+
+INSERT INTO TABLE(
+    SELECT c.investments 
+    FROM clients_tab c 
+    WHERE c.firstname = 'John' AND c.lastname = 'Smith'
+)
+SELECT 
+    'GM',
+    SYSDATE,
+    500,
+    current_price
+FROM stocks_tab
+WHERE company = 'GM';
+
+
+
+
+
+
